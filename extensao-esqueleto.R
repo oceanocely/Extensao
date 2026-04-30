@@ -51,7 +51,8 @@ dados_sinasc_1 = dados_sinasc[, c(1, 4, 5, 6, 7, 12, 13, 14, 15, 19, 21, 22, 23,
 
 ### Reduzindo as linhas para SP (código 35)
 
-dados_sinasc_2 = dados_sinasc_1 %>% filter(CODMUNRES >= 350000 & CODMUNRES < 360000)
+dados_sinasc_2 = dados_sinasc_1 %>% 
+  filter(substr(CODMUNRES, 1, 2) == "35")
 
 ### Gerando arquivo com dados apenas de SP
 
@@ -250,8 +251,8 @@ dados_sinasc_2 = dados_sinasc_2 %>%
     IDADEMAE < 34 ~ "30-34",
     IDADEMAE < 39 ~ "35-39",
     IDADEMAE < 44 ~ "40-44",
-    IDADEMAE < 49 ~ "45-49",
-    IDADEMAE >= 49 ~ "50+"))
+    IDADEMAE <= 49 ~ "45-49",
+    IDADEMAE > 49 ~ "50+"))
 dados_sinasc_2 = dados_sinasc_2 %>% 
   mutate(F_IDADE = factor(F_IDADE, levels = c("<15", "15-19", "20-24", "25-29", "30-34", 
                                               "35-39","40-44", "45-49", "50+")))
@@ -284,11 +285,104 @@ dados_sinasc_2 = dados_sinasc_2 %>%
 # nova variável apenas para casos de GRAVIDEZ Única: dados_sinasc_2$F_PIG: PIG: PESO < PESO_P10, AIG: PESO_P10 <= PESO <= PESO_P90, GIG: PESO > PESO_P90
 # Atenção para casos de NA em SEMAGESTAC, PESO ou SEXO. Lembre-se também que em dados_sinasc_2 SEXO está como fator com as categorias Feminino e Masculino.
 
+tabela_pig = read.csv("Tabela_PIG_Brasil.csv", header = T, sep = ";")
+tabela_pig$SEXO = factor(tabela_pig$SEXO, levels = c("Masculino", "Feminino"))
+dados_sinasc_2 = merge(dados_sinasc_2, tabela_pig, by = c("SEMAGESTAC", "SEXO"), all.x = T)
+dados_sinasc_2 = dados_sinasc_2 %>% filter(GRAVIDEZ == "Única") %>%
+  mutate(F_PIG = case_when(
+    PESO < PESO_P10 ~ "PIG",
+    PESO_P10 <= PESO & PESO <= PESO_P90 ~ "AIG",
+    PESO > PESO_P90 ~ "GIG",
+    is.na(PESO) | is.na(PESO_P10) | is.na(PESO_P90) ~ NA_character_))
+dados_sinasc_2$F_PIG = factor(dados_sinasc_2$F_PIG, levels = c("PIG", "AIG", "GIG"))
+str(dados_sinasc_2$F_PIG)
 
 # Tarefa 9. Obter as frequências das categorias das variáveis qualitativas e medidas descritivas de variáveis quantitativas e salvar os resultados em novas variáveis.
 # Exemplo: freq_SEXO = table(dados_sinasc_2$SEXO)   media_peso = mean(dados_sinasc_2$PESO)
 # Medidas descritivas a serem calculadas para variáveis QUANTITATIVAS: P25, P50, P75, média e desvio-padrão. Atenção: usar na.rm = TRUE, quando necessário.
 
+### Criando a base
+
+base = data.frame(CODMUNRES = sort(unique(dados_sinasc_2$CODMUNRES)))
+
+### Informações sobre os nascimentos
+
+base = dados_sinasc_2 %>% 
+  count(CODMUNRES, name = "TN") %>% 
+  right_join(base, by = "CODMUNRES")
+
+dados_SP = dados_sinasc %>% 
+  filter(substr(CODMUNRES, 1, 2) == "35")
+dados_SP_comp = dados_SP %>% group_by(CODMUNRES) %>% 
+  summarise(TNRC = sum(complete.cases(.)))
+base = base %>% left_join(dados_SP_comp, by = "CODMUNRES")
+
+dados_SP1_comp = dados_sinasc_2 %>% 
+  mutate(comp = complete.cases(.)) %>% 
+  group_by(CODMUNRES) %>% 
+  summarise(TNRCR = sum(comp), .groups = "drop")
+base = base %>% left_join(dados_SP1_comp, by = "CODMUNRES")
+
+### Informações sobre as gestantes
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_15 = sum(F_IDADE == "<15", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_15_19 = sum(F_IDADE == "15-19", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_20_24 = sum(F_IDADE == "20-24", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_25_29 = sum(F_IDADE == "25-29", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_30_34 = sum(F_IDADE == "30-34", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_35_39 = sum(F_IDADE == "35-39", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_40_44 = sum(F_IDADE == "40-44", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_45_49 = sum(F_IDADE == "45-49", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGI_50 = sum(F_IDADE == "50+", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(TGIF = sum(F_IDADE %in% c("<15", "15-19", "20-24", "25-29", "30-34",
+                         "35-39", "40-44", "45-49"), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(IM_P25 = quantile(IDADEMAE, probs = 0.25, na.rm = TRUE),
+            IM_P50 = quantile(IDADEMAE, probs = 0.50, na.rm = TRUE),
+            IM_P75 = quantile(IDADEMAE, probs = 0.75, na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(IM_MD = mean(IDADEMAE, na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(IM_DP = sd(IDADEMAE, na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+  summarise(EM_S = sum(F_IDADE == "<15", na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
 
 # Tarefa 10. Criar as colunas do novo banco de dados (de nome SINASC_UF.csv Exemplo: SINASC_RJ.csv) com base nas análises prévias, devendo as variáveis estar na ordem indicada abaixo
 # ATENÇÃO aos nomes das variáveis e ordem das colunas
