@@ -757,17 +757,33 @@ write.csv(base, "SINASC_UF.csv", row.names = FALSE)
 # verificar se a leitura foi feita corretamente e a estrutura dos dados
 # nomeie o banco de dados como dados_sim
 
+### Leitura do banco de dados
+
+dados_sim = read.csv("Mortalidade_Geral_2015.csv", header = TRUE, sep = ";")
 
 # Tarefa 2. Reduzir dados_sim apenas para as colunas que serão utilizadas, nomeando este novo banco de dados como dados_sim_1
 # as colunas serão: 1, 3, 4, 8, 9, 10, 11, 14, 17, 35, 36, 37, 47, 77, 84
 # nomes das respectivas variáveis: CONTADOR, TIPOBITO, DTOBITO, DTNASC, IDADE, SEXO, RACACOR, ESC2010, 
 # CODMUNRES, TPMORTEOCO, OBITOGRAV, OBITOPUERP, CAUSABAS, TPOBITOCOR, MORTEPARTO
 
+### Reduzindo as colunas
+
+dados_sim_1 = dados_sim[, c(1, 3, 4, 8, 9, 10, 11, 14, 17, 35, 36, 37, 47, 77, 84)]
+
 # Tarefa 3. Reduzir dados_sim_1 apenas para o estado que o aluno irá trabalhar (utilizar os dois primeiros dígitos de 
 # CODMUNRES), nomeando este novo banco de dados como dados_sim_2
 # Códigos das UF: 11: RO, 12: AC, 13: AM, 14: RR, 15: PA, 16: AP, 17: TO, 21: MA, 22: PI, 23: CE, 24: RN
 # 25: PB, 26: PE, 27: AL, 28: SE, 29: BA, 31: MG, 32: ES, 33: RJ, 35: SP, 41: PR, 42: SC, 43: RS
 # 50: MS, 51: MT, 52: GO, 53: DF
+
+### Reduzindo dados para SP
+
+dados_sim_2 = dados_sim_1 %>%
+  filter(substr(CODMUNRES, 1, 2) == "35")
+
+### Gerando arquivo de dados de SP
+
+write.csv(dados_sim_2, "dados_sim_2.csv", row.names = FALSE)
 
 # observar abaixo o número de óbitos por UF de residência para certificar-se que seu banco de dados está correto
 # 11: 7948      12: 3517      13: 16675     14: 2091      15: 37365     16: 2946       17: 7402
