@@ -1202,8 +1202,109 @@ write.csv(base, "SIM_SP.csv", row.names = FALSE)
 # 12 POPRC_F_15_49
 # 13 POPRC_F_50
 
+### Leitura dos bancos de dados
+
+sidra1 = read.csv("população residente estimada - UF e municípios - 2015 - SIDRA - tabela_6579.csv", header = TRUE, sep = ";")
+sidra2 = read.csv("população residente censo 2010 - por faixa etária -  UF - SIDRA - tabela_1552.csv", header = TRUE, sep = ";")
+sidra3 = read.csv("população residente censo 2010 - UF e municípios - total e por sexo - SIDRA - tabela_1552.csv",
+                  header = TRUE, sep = ";")
+sidra4 = read.csv("população residente censo 2010 - por faixa etária e sexo -  municípios - SIDRA - tabela_1552.csv", header = TRUE,
+                  sep = ";")
+
+### Gerando df
+
+base = sidra1 %>%
+  filter(substr(CODMUNRES, 1, 2) == "35")
+base = data.frame(CODMUNRES = sort(unique(base$CODMUNRES)))
+
+### Adicionando as variáveis ANO e NIVEL
+
+base = base %>%
+  mutate(ANO = "2015")  %>%
+  relocate(ANO, .before = 1)
+
+base = base %>%
+  mutate(NIVEL = if_else(CODMUNRES == 35, "UF", "MUNICIPIO")) %>%
+  relocate(NIVEL, .before = 2)
+
+### 1. População total residente estimada
+
+tab = sidra1 %>% select(-NOME)
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 2. População total residente em CENSO anterior a ANO (CENSO 2010)
+
+tab = sidra3 %>% select(-NOME, -POPRC_M, -POPRC_F)
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 3. População residente em CENSO anterior a ANO (CENSO 2010) por sexo
+
+tab = sidra3 %>% select(-NOME, -POPRC_T, -POPRC_F) #Masculina
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = sidra3 %>% select(-NOME, -POPRC_T, -POPRC_M) #Feminina
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 4. População residente em CENSO anterior a ANO (CENSO 2010) por faixa etária
+
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_15 = sum(case_when(F_IDADE %in% c("0 a 4 anos", "5 a 9 anos", "10 a 14 anos") ~ POP,
+                           TRUE ~ 0), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_15_49 = sum(case_when(F_IDADE %in% c("15 a 19 anos", "20 a 24 anos", "25 a 29 anos",
+                                                    "30 a 34 anos", "35 a 39 anos", "40 a 44 anos",
+                                                    "45 a 49 anos") ~ POP, TRUE ~ 0), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_50 = sum(case_when(F_IDADE %in% c("50 a 54 anos", "55 a 59 anos", "60 a 64 anos",
+                                                    "65 a 69 anos", "70 a 74 anos", "75 a 79 anos",
+                                                    "80 a 89 anos", "90 a 99 anos", "100 anos ou mais") ~ POP,
+                                     TRUE ~ 0), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 5. População feminina residente em CENSO anterior a ANO (CENSO 2010) por faixa etária
+
+### 5.1 <15 anos
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_F_15 = sum(case_when(F_IDADE %in% c("0 a 4 anos", "5 a 9 anos", "10 a 14 anos") ~ POPF,
+                                     TRUE ~ 0), na.rm = TRUE)) 
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 5.2 >=15 e <=49
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_F_15_49 = sum(case_when(F_IDADE %in% c("15 a 19 anos", "20 a 24 anos", "25 a 29 anos",
+                                                       "30 a 34 anos", "35 a 39 anos", "40 a 44 anos",
+                                                       "45 a 49 anos") ~ POPF, TRUE ~ 0), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### 5.3 >=50
+
+tab = sidra4 %>% group_by(CODMUNRES) %>%
+  summarise(POPRC_F_50 = sum(case_when(F_IDADE %in% c("50 a 54 anos", "55 a 59 anos", "60 a 64 anos",
+                                                    "65 a 69 anos", "70 a 74 anos", "75 a 79 anos",
+                                                    "80 a 89 anos", "90 a 99 anos", "100 anos ou mais") ~ POPF,
+                                     TRUE ~ 0), na.rm = TRUE))
+base = base %>% left_join(tab, by = "CODMUNRES")
+
+### Preenchendo linha do município
+
+base[1, 8] = sum(base[2:646, 8])
+base[1, 9] = sum(base[2:646, 9])
+base[1, 10] = sum(base[2:646, 10])
+base[1, 11] = sum(base[2:646, 11])
+base[1, 12] = sum(base[2:646, 12])
+base[1, 13] = sum(base[2:646, 13])
+
 # Exporte o arquivo em formato CSV
 # Faça o commit com a mensagem "Script e dados TAREFA 3 - SIDRA"
+
+### Gerando e exportando arquivo
+
+SIDRA_SP = base
+write.csv(SIDRA_SP, "SIDRA_SP.csv", row.names = FALSE)
 
 #####################################################################################################
 # ETAPA 4: GERAR BANCO DE DADOS FINAL DO ESTADO, BASEADO NAS ANÁLISES DE SINASC, SIM, IBGE, SNIS,...
