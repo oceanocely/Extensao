@@ -1337,6 +1337,36 @@ base[1, 13] = sum(base[2:646, 13])
 SIDRA_SP = base
 write.csv(SIDRA_SP, "SIDRA_SP.csv", row.names = FALSE)
 
+### Tarefa 2: Leitura dos bancos de dados
+
+sinisa_esg = read.csv("agua e esgoto - município - 2015 - agua e esgoto - município - 2015.csv", header = TRUE, sep = ",") %>%
+  filter(substr(CODMUNRES, 1, 2) == "35")
+
+### Incluindo a variável ANO  e NIVEL e excluindo colunas
+
+SINISA_SP = sinisa_esg %>%
+  mutate(ANO = "2015")  %>%
+  relocate(ANO, .before = 1)
+
+SINISA_SP = SINISA_SP[, c(-3,-4,-5)]
+
+total_ra = sum(SINISA_SP$POPR_RA, na.rm = TRUE)
+total_re = sum(SINISA_SP$POPR_RE, na.rm = TRUE)
+SINISA_SP = SINISA_SP %>% add_row(.before = 1,
+                                  ANO = "2015",
+                                  CODMUNRES = 35,
+                                  POPR_RA = total_ra,
+                                  POPR_RE = total_re)
+
+SINISA_SP = SINISA_SP %>%
+  mutate(NIVEL = if_else(CODMUNRES == 35, "UF", "MUNICIPIO")) %>%
+  relocate(NIVEL, .before = 2)
+
+### Exportando arquivo
+
+write.csv(SINISA_SP, "SINISA_SP.csv", row.names = FALSE)
+
+
 #####################################################################################################
 # ETAPA 4: GERAR BANCO DE DADOS FINAL DO ESTADO, BASEADO NAS ANÁLISES DE SINASC, SIM, IBGE, SNIS,...
 ######################################################################################################
