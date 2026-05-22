@@ -1366,6 +1366,76 @@ SINISA_SP = SINISA_SP %>%
 
 write.csv(SINISA_SP, "SINISA_SP.csv", row.names = FALSE)
 
+### Tarefa 3: Leitura dos bancos de dados
+
+codmun = read.csv("códigos dos municípios - 2010.csv",
+                  header = TRUE,
+                  sep = ";") %>%
+  select(-X) %>%
+  filter(substr(CODMUNRES, 1, 2) == "35")
+
+atlas_1 = read.csv("IDHM - 2010 - municípios - Atlas Brasil.csv",
+                   header = TRUE, 
+                   sep = ";") %>% 
+  select(where(~ !all(is.na(.) | . == "")))
+
+atlas_2 = read.csv("IDHM - 2010 (CENSO) e 2015 (PNAD) - total e por sexo - UF - Atlas Brasil.csv",
+                   header = TRUE,
+                   sep =  ";") %>% 
+  select(where(~ !all(is.na(.) | . == "")))
+
+### Gerando df e adicionando a variáveil ANO 
+
+base = codmun %>%
+  mutate(ANO = "2015")  %>%
+  relocate(ANO, .before = 1)
+
+### Adicionando linha da UF
+
+base = base %>%
+  add_row(ANO = "2015", CODMUNRES = 35, .before = 1) %>% 
+  mutate(NIVEL = if_else(CODMUNRES == 35, "UF", "MUNICIPIO")) %>%
+  relocate(NIVEL, .before = 2)
+
+### Unindo código dos municípios aos dados
+
+library(stringr)
+
+atlas_1$municipiostr = str_sub(atlas_1$município, end = -6)
+atlas_1 = atlas_1 %>% 
+  select(-município) %>% 
+  rename(município = municipiostr)
+
+codmun$município = str_replace(codmun$município,
+                               "Moji Mirim",
+                               "Mogi Mirim") # Consertando erro de grafia
+
+atlas_1 = atlas_1 %>% left_join(codmun, by = "município")
+base = base %>% left_join(atlas_1, by = "CODMUNRES")
+
+base = base %>% 
+  select(-c(município.x, município.y)) %>% 
+  rename(IDHM_A = IDHM_2010)
+
+### Preenchendo linha da UF
+
+base [1, 4] = atlas_2 [26, 3]
+
+### Variáveis com informação apenas da UF
+
+base = base %>% 
+  mutate(IDHM_CA = NA, 
+         IDHM_CA_M = NA,
+         IDHM_CA_F = NA)
+base [1, 5] = atlas_2 [26, 2] #IDHM da população residente em CENSO anterior a ANO (CENSO 2010)
+base [1, 6] = atlas_2 [26, 4] #IDHM da população masculina residente em CENSO anterior a ANO (CENSO 2010)
+base [1, 7] = atlas_2 [26, 6] #IDHM da população feminina residente em CENSO anterior a ANO (CENSO 2010)
+
+ATLAS_SP = base
+
+### Exportando arquivo
+
+write.csv(ATLAS_SP, "ATLAS_SP.csv", row.names = FALSE)
 
 #####################################################################################################
 # ETAPA 4: GERAR BANCO DE DADOS FINAL DO ESTADO, BASEADO NAS ANÁLISES DE SINASC, SIM, IBGE, SNIS,...
