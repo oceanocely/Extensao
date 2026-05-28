@@ -359,12 +359,12 @@ base = base %>% left_join(tab, by = "CODMUNRES")
 
 ### 2.2 Medidas de posição e dispersão da idade materna
 
-tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>% 
+tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>%
   summarise(IM_P25 = quantile(IDADEMAE, probs = 0.25, na.rm = TRUE),
             IM_P50 = quantile(IDADEMAE, probs = 0.50, na.rm = TRUE),
             IM_P75 = quantile(IDADEMAE, probs = 0.75, na.rm = TRUE),
-            IM_MD = mean(IDADEMAE, na.rm = TRUE),
-            IM_DP = sd(IDADEMAE, na.rm = TRUE))
+            IM_MD = round(mean(IDADEMAE, na.rm = TRUE),2),
+            IM_DP = round(sd(IDADEMAE, na.rm = TRUE),2))
 base = base %>% left_join(tab, by = "CODMUNRES")
 
 ### 2.3 Escolaridade materna
@@ -430,8 +430,8 @@ tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>%
   summarise(DG_P25 = quantile(SEMAGESTAC, probs = 0.25, na.rm = TRUE),
             DG_P50 = quantile(SEMAGESTAC, probs = 0.50, na.rm = TRUE),
             DG_P75 = quantile(SEMAGESTAC, probs = 0.75, na.rm = TRUE),
-            DG_MD  = mean(SEMAGESTAC, na.rm = TRUE),
-            DG_DP  = sd(SEMAGESTAC, na.rm = TRUE))
+            DG_MD  = round(mean(SEMAGESTAC, na.rm = TRUE),2),
+            DG_DP  = round(sd(SEMAGESTAC, na.rm = TRUE), 2))
 base = base %>% left_join(tab, by = "CODMUNRES")
 
 ### 3.3 Pré-natal
@@ -527,8 +527,8 @@ tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>%
   summarise(PESO_P25 = quantile(PESO, probs = 0.25, na.rm = TRUE),
             PESO_P50 = quantile(PESO, probs = 0.50, na.rm = TRUE),
             PESO_P75 = quantile(PESO, probs = 0.75, na.rm = TRUE),
-            PESO_MD  = mean(PESO, na.rm = TRUE),
-            PESO_DP  = sd(PESO, na.rm = TRUE))
+            PESO_MD  = round(mean(PESO, na.rm = TRUE),2),
+            PESO_DP  = round(sd(PESO, na.rm = TRUE),2))
 base = base %>% left_join(tab, by = "CODMUNRES")
 
 # PIG, GIG e AIG
@@ -549,8 +549,8 @@ base = base %>% left_join(tab, by = "CODMUNRES")
 # Medidas de posição e dispersão
 
 tab = dados_sinasc_2 %>% group_by(CODMUNRES) %>%
-  summarise(APG5_MD = mean(APGAR5, na.rm = TRUE),
-            APG5_DP = sd(APGAR5, na.rm = TRUE))
+  summarise(APG5_MD = round(mean(APGAR5, na.rm = TRUE),2),
+            APG5_DP = round(sd(APGAR5, na.rm = TRUE),2))
 base = base %>% left_join(tab, by = "CODMUNRES")
 
 ### 5.5 Anomalias
@@ -564,9 +564,6 @@ base = base %>% left_join(tab, by = "CODMUNRES")
 
 # ANO
 
-dados_sinasc_2 = dados_sinasc_2 %>%
-  mutate(ANO = "2015")  %>%
-  relocate(ANO, .before = 1)
 base = base %>%
   mutate(ANO = "2015")  %>%
   relocate(ANO, .before = 1)
@@ -574,8 +571,7 @@ base = base %>%
 # Criando df com dados de UF
 
 estado_sp = dados_sinasc_2 %>%
-  summarise(ANO = unique(ANO)[1],
-            CODMUNRES = 35,
+  summarise(CODMUNRES = 35,
     
     ### Nascimentos
     TN = n(),
@@ -597,8 +593,8 @@ estado_sp = dados_sinasc_2 %>%
     IM_P25 = quantile(IDADEMAE, 0.25, na.rm = TRUE),
     IM_P50 = quantile(IDADEMAE, 0.50, na.rm = TRUE),
     IM_P75 = quantile(IDADEMAE, 0.75, na.rm = TRUE),
-    IM_MD = mean(IDADEMAE, na.rm = TRUE),
-    IM_DP = sd(IDADEMAE, na.rm = TRUE),
+    IM_MD = round(mean(IDADEMAE, na.rm = TRUE),2),
+    IM_DP = round(sd(IDADEMAE, na.rm = TRUE),2),
     
     ### Escolaridade
     EM_S  = sum(ESCMAE2010 == "Sem escolaridade", na.rm = TRUE),
@@ -643,8 +639,8 @@ estado_sp = dados_sinasc_2 %>%
     DG_P25 = quantile(SEMAGESTAC, 0.25, na.rm = TRUE),
     DG_P50 = quantile(SEMAGESTAC, 0.50, na.rm = TRUE),
     DG_P75 = quantile(SEMAGESTAC, 0.75, na.rm = TRUE),
-    DG_MD  = mean(SEMAGESTAC, na.rm = TRUE),
-    DG_DP  = sd(SEMAGESTAC, na.rm = TRUE),
+    DG_MD  = round(mean(SEMAGESTAC, na.rm = TRUE),2),
+    DG_DP  = round(sd(SEMAGESTAC, na.rm = TRUE),2),
     
     ### Pré-natal
     TKC_NR  = sum(KOTELCHUCK == "1", na.rm = TRUE),
@@ -704,8 +700,8 @@ estado_sp = dados_sinasc_2 %>%
     PESO_P25 = quantile(PESO, 0.25, na.rm = TRUE),
     PESO_P50 = quantile(PESO, 0.50, na.rm = TRUE),
     PESO_P75 = quantile(PESO, 0.75, na.rm = TRUE),
-    PESO_MD  = mean(PESO, na.rm = TRUE),
-    PESO_DP  = sd(PESO, na.rm = TRUE),
+    PESO_MD  = round(mean(PESO, na.rm = TRUE),2),
+    PESO_DP  = round(sd(PESO, na.rm = TRUE),2),
     
     ### PIG/AIG/GIG
     TRPIG_P = sum(F_PIG == "PIG", na.rm = TRUE),
@@ -716,13 +712,17 @@ estado_sp = dados_sinasc_2 %>%
     TRAPG5_B = sum(F_APGAR5 == "Baixo", na.rm = TRUE),
     TRAPG5_N = sum(F_APGAR5 == "Normal", na.rm = TRUE),
     
-    APG5_MD = mean(APGAR5, na.rm = TRUE),
-    APG5_DP = sd(APGAR5, na.rm = TRUE),
+    APG5_MD = round(mean(APGAR5, na.rm = TRUE),2),
+    APG5_DP = round(sd(APGAR5, na.rm = TRUE),2),
     
     ### Anomalias
     TRAC  = sum(IDANOMAL == "Sim", na.rm = TRUE),
     TRSAC = sum(IDANOMAL == "Não", na.rm = TRUE))
 estado_sp$TNRC = sum(complete.cases(dados_sinasc))
+
+estado_sp = estado_sp %>%
+  mutate(ANO = "2015")  %>%
+  relocate(ANO, .before = 1)
 
 # Alinhando as colunas
 estado_sp = estado_sp %>%
@@ -736,12 +736,12 @@ base = base %>%
   mutate(NIVEL = if_else(CODMUNRES == 35, "UF", "MUNICIPIO")) %>% 
   relocate(NIVEL, .before = 2)
 
-base = base %>%
+SINASC_SP = base %>%
   arrange(CODMUNRES != 35)
 
 # Tarefa 11: Exporte o banco de dados com o nome SINASC_UF.csv
 
-write.csv(base, "SINASC_UF.csv", row.names = FALSE)
+write.csv(SINASC_SP, "SINASC_SP.csv", row.names = FALSE)
 
 # Ao terminar a ETAPA 1 commite e envie para o repositório REMOTO com o comentário "Dados da UF e Script Etapa 1"
 
@@ -1457,6 +1457,8 @@ write.csv(ATLAS_SP, "ATLAS_SP.csv", row.names = FALSE)
 # de BDEM_UF_2015
 
 # Após a criação do banco, fazer commit “Script e dados BDEM_UF_2015”
+
+
 
 
 ############################################################################################
