@@ -1161,7 +1161,7 @@ base = base %>%
   mutate(NIVEL = if_else(CODMUNRES == 35, "UF", "MUNICIPIO")) %>% 
   relocate(NIVEL, .before = 2)
 
-base = base %>%
+SIM_SP = base %>%
   arrange(CODMUNRES != 35)
 
 # Tarefa 8: Exporte o banco de dados com o nome SIM_UF.csv
@@ -1458,8 +1458,21 @@ write.csv(ATLAS_SP, "ATLAS_SP.csv", row.names = FALSE)
 
 # Após a criação do banco, fazer commit “Script e dados BDEM_UF_2015”
 
+### Unindo SIDRA e ATLAS
 
+BD1 = merge(SIDRA_SP, ATLAS_SP, 
+            by=c("ANO", "NIVEL", "CODMUNRES"), 
+            all=TRUE)
 
+### Unindo SINASC + SIM + SINISA
+
+BD2 = merge(SINASC_SP, SIM_SP, 
+            by=c("ANO", "NIVEL", "CODMUNRES"), 
+            all=TRUE)
+
+BD2 = merge(BD2, SINISA_SP, 
+        by=c("ANO", "NIVEL", "CODMUNRES"), 
+        all=TRUE)
 
 ############################################################################################
 # ETAPA 5: EMPILHAMENTO DOS DATAFRAMES DE CADA ESTADO, GERANDO UM DATAFRAME DE 27 LINHAS
