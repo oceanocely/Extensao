@@ -1474,6 +1474,34 @@ BD2 = merge(BD2, SINISA_SP,
         by=c("ANO", "NIVEL", "CODMUNRES"), 
         all=TRUE)
 
+### Tratando CODMUNRES
+
+BD1 = BD1 %>% 
+  rename(COD7 = CODMUNRES)
+
+BD1 = BD1 %>% 
+  mutate(CODMUNRES = ifelse(NIVEL == "MUNICIPIO", substr(COD7, 1, 6), COD7))
+         
+### Unindo BD1 e BD2
+
+BD3 = merge(BD1, BD2, by=c("ANO", "NIVEL", "CODMUNRES"), 
+            all = TRUE)
+
+### Excluindo coluna auxiliar
+
+BD3 = BD3 %>% 
+  select(-CODMUNRES)
+BD3 = BD3 %>% 
+  rename(CODMUNRES  = COD7)
+
+BD3 = rbind(BD3[701, ], BD3[-701, ])
+rownames(BD3) = NULL
+DA_SP = BD3
+
+### Criando arquivo .csv
+
+write.csv(DA_SP, "DA_SP.csv", row.names = FALSE)
+
 ############################################################################################
 # ETAPA 5: EMPILHAMENTO DOS DATAFRAMES DE CADA ESTADO, GERANDO UM DATAFRAME DE 27 LINHAS
 ############################################################################################
