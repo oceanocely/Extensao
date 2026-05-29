@@ -1502,6 +1502,25 @@ DA_SP = BD3
 
 write.csv(DA_SP, "DA_SP.csv", row.names = FALSE)
 
+### Criando novas variáveis com indicadores
+
+DA_SP = DA_SP %>%
+  mutate(TO = as.numeric(TO),
+         POPRE_T = as.numeric(POPRE_T))
+DA_SP = DA_SP %>%
+  mutate(TFG = (TN/POPRC_F_15_49)*1000,
+         TMG = (TO/POPRE_T)*1000,
+         RMM = (TO_MT/TN)*100000,
+         TMM = (TO_MT/POPRC_F_15_49)*100000,
+         TMM_P = (TO_MT_P/POPRC_F_15_49)*100000,
+         TMN = (TO_NT/TN)*1000,
+         TMN_P = (TO_NT_P/TN)*1000,
+         TMN_T = (TO_NT_T/TN)*1000,
+         TMI = ((TO_NT + TO_PNT)/TN)*1000)
+
+BDEM_SP_2015 = DA_SP
+write.csv(BDEM_SP_2015, "BDEM_SP_2015.csv", row.names = FALSE)
+
 ############################################################################################
 # ETAPA 5: EMPILHAMENTO DOS DATAFRAMES DE CADA ESTADO, GERANDO UM DATAFRAME DE 27 LINHAS
 ############################################################################################
